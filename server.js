@@ -17,11 +17,14 @@ app.use(cors({
 
 app.options('*', cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
-// Root route - serve index.html
+// Serve static files from public folder
+const publicPath = path.resolve(__dirname, 'public');
+app.use(express.static(publicPath));
+
+// Root route
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(publicPath, 'index.html'));
 });
 
 let memDB = [];
@@ -168,8 +171,9 @@ app.post('/api/admin/logout', adminAuth, (req, res) => {
 // Start server
 app.listen(PORT, () => {
   log('Server running on port ' + PORT);
+  log('Serving static files from: ' + publicPath);
 
-  // ✅ Self-Ping - يدعم Render بشكل صحيح
+  // ✅ Self-Ping
   const host = process.env.RENDER_EXTERNAL_HOSTNAME;
   const PING_URL = host ? `https://${host}/ping` : null;
 
